@@ -35,6 +35,32 @@ const mainQuestion = [
   },
 ];
 
+const departmentQs = [
+  {
+    type: "input",
+    message: "What is the name of the new department?",
+    name: "name",
+  },
+];
+
+const roleQs = [
+  {
+    type: "input",
+    message: "What is the name of the new role?",
+    name: "name",
+  },
+  {
+    type: "input",
+    message: "What is the salary for the new role?",
+    name: "name",
+  },
+  {
+    type: "input",
+    message: "Which department is it a part of?",
+    choices: "name",
+  },
+];
+
 // TODO: Create a function to initialize app
 function init() {
   inquirer.prompt(mainQuestion).then((response) => {
@@ -114,8 +140,12 @@ function addRole() {
 }
 
 function addDepartment() {
-  inquirer.prompt(question).then((response) => {
-    displaychoice(response.choice);
+  inquirer.prompt(departmentQs).then((response) => {
+    const sql = `INSERT INTO department (name) VALUES ("${response.name}")`;
+    db.query(sql, function (err, results) {
+      console.log("New department added");
+      return init();
+    });
   });
 }
 
