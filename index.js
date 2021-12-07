@@ -1,8 +1,23 @@
 // TODO: Include packages needed for this application
 const inquirer = require("inquirer");
-const generateMarkdown = require("./utils/generateMarkdown");
+const mysql = require("mysql2");
+const cTable = require("console.table");
+
+// Connect to database
+const db = mysql.createConnection(
+  {
+    host: "localhost",
+    // MySQL username,
+    user: "root",
+    // MySQL password
+    password: "",
+    database: "company_db",
+  },
+  console.log(`Connected to the company_db database.`)
+);
+
 // TODO: Create an array of questions for user input
-const question = [
+const mainQuestion = [
   {
     type: "list",
     message: "What would you like to do?",
@@ -22,9 +37,8 @@ const question = [
 
 // TODO: Create a function to initialize app
 function init() {
-  inquirer.prompt(question).then((response) => {
+  inquirer.prompt(mainQuestion).then((response) => {
     displaychoice(response.choice);
-    writeToFile("GENERATEDREADME.md", markdown);
   });
 }
 
@@ -58,13 +72,52 @@ function displaychoice(choice) {
   return response;
 }
 
-function viewEmployees() {}
-function addEmployee() {}
-function updateEmployee() {}
-function viewRoles() {}
-function addRole() {}
-function viewDepartments() {}
-function addDepartment() {}
+function viewEmployees() {
+  db.query("SELECT * FROM employee", function (err, results) {
+    console.table(results);
+    return init();
+  });
+}
+
+function viewRoles() {
+  db.query("SELECT * FROM role", function (err, results) {
+    console.table(results);
+    return init();
+  });
+}
+
+function viewDepartments() {
+  db.query(
+    "SELECT * FROM department JOIN role ON department.",
+    function (err, results) {
+      console.table(results);
+      return init();
+    }
+  );
+}
+
+function addEmployee() {
+  inquirer.prompt(question).then((response) => {
+    displaychoice(response.choice);
+  });
+}
+function updateEmployee() {
+  inquirer.prompt(question).then((response) => {
+    displaychoice(response.choice);
+  });
+}
+
+function addRole() {
+  inquirer.prompt(question).then((response) => {
+    displaychoice(response.choice);
+  });
+}
+
+function addDepartment() {
+  inquirer.prompt(question).then((response) => {
+    displaychoice(response.choice);
+  });
+}
 
 // Function call to initialize app
 init();
