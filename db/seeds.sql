@@ -13,11 +13,11 @@ VALUES (1, "Dairy Manager", 50000),
        (3, "Grocery Manager",52000),
        (3, "Stocker", 27000);
 
-INSERT INTO employee (role_id, first_name, last_name)
-VALUES (1, "Kyle", "Richards"),
-       (2, "Nathan", "Smith"),
-       (3, "Ken", "Jennings"),
-       (4, "Sandy", "Cheeks"),
-       (5, "George","Bird"),
-       (6, "Scooter", "Bell"),
-       (6, "Rebecca", "Black");
+INSERT INTO employee (role_id, first_name, last_name, manager_id)
+VALUES (1, "Kyle", "Richards", 1),
+       (2, "Nathan", "Smith", 1),
+       (3, "Ken", "Jennings", 1),
+       (4, "Sandy", "Cheeks", 1),
+       (5, "George","Bird", 1),
+       (6, "Scooter", "Bell", 1),
+       (6, "Rebecca", "Black", 1);

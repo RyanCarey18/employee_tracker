@@ -82,13 +82,13 @@ const employeeQs = [
   },
   {
     type: "list",
-    message: "Which department is it a part of?",
+    message: "Which role is he a part of?",
     name: "role",
     choices: roles,
   },
   {
     type: "list",
-    message: "Which department is it a part of?",
+    message: "Who is his manager?",
     name: "manager",
     choices: employees,
   },
@@ -97,8 +97,12 @@ const employeeQs = [
 // TODO: Create a function to initialize app
 function init() {
   inquirer.prompt(mainQuestion).then((response) => {
-    displaychoice(response.choice);
-    return;
+    if (response.choice === "Quit") {
+      return;
+    } else {
+      displaychoice(response.choice);
+      return;
+    }
   });
 }
 
@@ -133,10 +137,14 @@ function displaychoice(choice) {
   return response;
 }
 
+//work
+//in
+//progress
 function quit() {
   prompt.ui.close();
   return;
 }
+
 //returns a table of all employees then replays the
 function viewEmployees() {
   db.query("SELECT * FROM employee", function (err, results) {
@@ -161,14 +169,44 @@ function viewDepartments() {
   });
 }
 
-//adds an employee to the database
-function addEmployee() {
-  inquirer.prompt(question).then((response) => {
-    displaychoice(response.choice);
+//uses the selected data from inquirer to prepare the data to be used to create a new employee
+function prepareAddEmployee() {
+  inquirer.prompt(employeeQs).then((response) => {
+    let managerNames = response.manager.split(" ");
+    let manager = "";
+    let role = "";
+
+    const roleSql = `SELECT id FROM role WHERE title = "${response.role}"`;
+    const managerSql = `SELECT id FROM employee WHERE first_name = "${managerNames[0]}" AND last_name = "${managerNames[1]}"`;
+    let employeeSql = ``;
+    //searches the database for the id of the selected role
+    db.query(roleSql, function (err, results) {
+      console.log("role retrieved");
+      role = results[0].id;
+    });
+    //searches the database for the selected managers id
+    db.query(managerSql, function (err, results) {
+      console.log("manager retrieved");
+      manager = results[0].id;
+      employeeSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.firstName}", "${response.lastName}", ${role}, ${manager})`;
+      return addEmployee(employeeSql);
+    });
+  });
+}
+
+//Uses inputted data to create a new employee
+function addEmployee(employeeSql) {
+  db.query(employeeSql, function (err, results) {
+    console.log(err);
+    console.log("New employee added");
+    return init();
   });
 }
 
 //updates an employees information
+//work
+//in
+//progress
 function updateEmployee() {
   inquirer.prompt(question).then((response) => {
     displaychoice(response.choice);
@@ -197,7 +235,7 @@ function addDepartment() {
   });
 }
 
-//generates new questions for the
+//generates the departments to choose from when creating a new role.
 function generateDepartments() {
   departments = [];
   db.query("SELECT * FROM department", function (err, results) {
@@ -209,31 +247,33 @@ function generateDepartments() {
   });
 }
 
-//generates new questions for the
+//generates the choices to pick a role from for a new employee
 function generateRoles() {
   roles = [];
   db.query("SELECT * FROM role", function (err, results) {
     results.forEach((role) => {
-      roles.push(role.name);
+      roles.push(role.title);
     });
-    employeeQs[3].choices = roles;
-    addEmployee();
+    employeeQs[2].choices = roles;
   });
 }
-//generates new questions for the
+
+//generates the choices to choose from as a manager for a new employee
 function generateEmployees() {
   employees = [];
   db.query("SELECT * FROM employee", function (err, results) {
     results.forEach((employee) => {
       employees.push(`${employee.first_name} ${employee.last_name}`);
     });
-    employeeQs[3].choices = roles;
-    addEmployee();
+    employeeQs[3].choices = employees;
   });
 }
-generateAddEmployeeQs() {
-  generateEmployees()
-  generateRoles()
+
+//creates the questions to add an employee, then activates the questions.
+function generateAddEmployeeQs() {
+  generateEmployees();
+  generateRoles();
+  prepareAddEmployee();
 }
 
 // Function call to initialize app
