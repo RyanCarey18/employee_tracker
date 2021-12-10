@@ -49,7 +49,7 @@ const departmentQs = [
 ];
 
 //question to add a new role
-const roleQs = [
+const addRoleQs = [
   {
     type: "input",
     message: "What is the title of the new role?",
@@ -94,6 +94,29 @@ const employeeQs = [
   },
 ];
 
+const changeRoleQs = [
+  {
+    type: "list",
+    message: "Which employees role would you like to change?",
+    name: "employee",
+    choices: employees,
+  },
+  {
+    type: "list",
+    message: "What would you like their new role to be?",
+    name: "role",
+    choices: roles,
+  },
+];
+const areYouSureQs = [
+  {
+    type: "list",
+    message: "Are you Sure?",
+    name: "choice",
+    choices: ["yes", "no"],
+  },
+];
+
 // TODO: Create a function to initialize app
 function init() {
   inquirer.prompt(mainQuestion).then((response) => {
@@ -116,7 +139,7 @@ function displaychoice(choice) {
       response = generateAddEmployeeQs();
       break;
     case "Update Employee Role":
-      response = updateEmployee();
+      response = generateUpdateEmployeeQs();
       break;
     case "View All Roles":
       response = viewRoles();
@@ -147,11 +170,27 @@ function quit() {
 
 //returns a table of all employees then replays the
 function viewEmployees() {
-  db.query("SELECT * FROM employee", function (err, results) {
-    console.table(results);
-    return init();
-  });
+  db.query(
+    `SELECT employee.id, 
+    CONCAT (employee.first_name, " ",
+    employee.last_name) AS "employee name", 
+    role.title AS "job title", 
+    department.name AS department,
+    role.salary, 
+    CONCAT (manager.first_name, " ", manager.last_name) AS manager
+FROM employee
+    LEFT JOIN role ON employee.role_id = role.id
+    LEFT JOIN department ON role.department_id = department.id
+    LEFT JOIN employee manager ON employee.manager_id = manager.id`,
+    function (err, results) {
+      console.table(results);
+      return init();
+    }
+  );
 }
+//THEN I am presented with a formatted table showing employee data,
+//including employee ids, first names, last names, job titles,
+//departments, salaries, and managers that the employees report to
 
 //returns a table of all of the roles
 function viewRoles() {
@@ -193,6 +232,30 @@ function prepareAddEmployee() {
     });
   });
 }
+//uses the data results to prepare data to update an employees role.
+function prepareUpdateEmployee() {
+  inquirer.prompt(changeRoleQs).then((response) => {
+    let names = response.employee.split(" ");
+    let employee = "";
+    let role = "";
+
+    const roleSql = `SELECT id FROM role WHERE title = "${response.role}"`;
+    const employeeSql = `SELECT id FROM employee WHERE first_name = "${names[0]}" AND last_name = "${names[1]}"`;
+    let sql = ``;
+    //searches the database for the id of the selected role
+    db.query(roleSql, function (err, results) {
+      console.log("role retrieved");
+      role = results[0].id;
+    });
+    //searches the database for the selected employees id
+    db.query(employeeSql, function (err, results) {
+      console.log("employee retrieved");
+      employee = results[0].id;
+      sql = `UPDATE employee Set role_id = ${role} WHERE id = ${employee};`;
+      return updateEmployee(sql);
+    });
+  });
+}
 
 //Uses inputted data to create a new employee
 function addEmployee(employeeSql) {
@@ -203,24 +266,36 @@ function addEmployee(employeeSql) {
   });
 }
 
-//updates an employees information
-//work
-//in
-//progress
-function updateEmployee() {
-  inquirer.prompt(question).then((response) => {
-    displaychoice(response.choice);
+//updates an employees role in the db
+function updateEmployee(sql) {
+  db.query(sql, function (err, results) {
+    console.log(err);
+    console.log(results);
+    console.log("Employee role updated");
+    return init();
   });
 }
 
-//adds a role to the database
-function addRole() {
-  inquirer.prompt(roleQs).then((response) => {
-    const sql = `INSERT INTO role (title, salary, department_id) VALUES ("${response.title}", "${response.salary}", "${response.department}")`;
-    db.query(sql, function (err, results) {
-      console.log("New role added");
-      return init();
+//finds the id of the selected department
+function prepareAddRole() {
+  inquirer.prompt(addRoleQs).then((response) => {
+    const deptSql = `SELECT id FROM department WHERE  name = "${response.department}"`;
+    //searches the database for the id of the selected department
+    db.query(deptSql, function (err, results) {
+      console.log("department retrieved");
+      department = results[0].id;
+      roleSql = `INSERT INTO role (title, salary, department_id) VALUES ("${response.title}", "${response.salary}", "${department}")`;
+      return addRole(roleSql);
     });
+  });
+}
+//adds a role to the database
+function addRole(sql) {
+  db.query(sql, function (err, results) {
+    console.log("New role added");
+    console.log(err);
+    console.log(results);
+    return init();
   });
 }
 
@@ -242,8 +317,8 @@ function generateDepartments() {
     results.forEach((department) => {
       departments.push(department.name);
     });
-    roleQs[2].choices = departments;
-    addRole();
+    addRoleQs[2].choices = departments;
+    prepareAddRole();
   });
 }
 
@@ -255,6 +330,7 @@ function generateRoles() {
       roles.push(role.title);
     });
     employeeQs[2].choices = roles;
+    changeRoleQs[1].choices = roles;
   });
 }
 
@@ -266,10 +342,28 @@ function generateEmployees() {
       employees.push(`${employee.first_name} ${employee.last_name}`);
     });
     employeeQs[3].choices = employees;
+    changeRoleQs[0].choices = employees;
+  });
+}
+
+function areYouSure() {
+  inquirer.prompt(areYouSureQs).then((response) => {
+    if (response.choice === "no") {
+      return init();
+    } else {
+      prepareUpdateEmployee();
+    }
   });
 }
 
 //creates the questions to add an employee, then activates the questions.
+function generateUpdateEmployeeQs() {
+  generateEmployees();
+  generateRoles();
+  areYouSure();
+}
+
+//creates the questions to update an employee, then activates the questions.
 function generateAddEmployeeQs() {
   generateEmployees();
   generateRoles();
