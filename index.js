@@ -154,18 +154,10 @@ function displaychoice(choice) {
       response = addDepartment();
       break;
     case "Quit":
-      response = quit();
+      response = "";
       break;
   }
   return response;
-}
-
-//work
-//in
-//progress
-function quit() {
-  prompt.ui.close();
-  return;
 }
 
 //returns a table of all employees then replays the
@@ -188,9 +180,6 @@ FROM employee
     }
   );
 }
-//THEN I am presented with a formatted table showing employee data,
-//including employee ids, first names, last names, job titles,
-//departments, salaries, and managers that the employees report to
 
 //returns a table of all of the roles
 function viewRoles() {
@@ -220,12 +209,10 @@ function prepareAddEmployee() {
     let employeeSql = ``;
     //searches the database for the id of the selected role
     db.query(roleSql, function (err, results) {
-      console.log("role retrieved");
       role = results[0].id;
     });
     //searches the database for the selected managers id
     db.query(managerSql, function (err, results) {
-      console.log("manager retrieved");
       manager = results[0].id;
       employeeSql = `INSERT INTO employee (first_name, last_name, role_id, manager_id) VALUES ("${response.firstName}", "${response.lastName}", ${role}, ${manager})`;
       return addEmployee(employeeSql);
@@ -244,12 +231,10 @@ function prepareUpdateEmployee() {
     let sql = ``;
     //searches the database for the id of the selected role
     db.query(roleSql, function (err, results) {
-      console.log("role retrieved");
       role = results[0].id;
     });
     //searches the database for the selected employees id
     db.query(employeeSql, function (err, results) {
-      console.log("employee retrieved");
       employee = results[0].id;
       sql = `UPDATE employee Set role_id = ${role} WHERE id = ${employee};`;
       return updateEmployee(sql);
@@ -260,7 +245,6 @@ function prepareUpdateEmployee() {
 //Uses inputted data to create a new employee
 function addEmployee(employeeSql) {
   db.query(employeeSql, function (err, results) {
-    console.log(err);
     console.log("New employee added");
     return init();
   });
@@ -269,8 +253,6 @@ function addEmployee(employeeSql) {
 //updates an employees role in the db
 function updateEmployee(sql) {
   db.query(sql, function (err, results) {
-    console.log(err);
-    console.log(results);
     console.log("Employee role updated");
     return init();
   });
@@ -282,7 +264,6 @@ function prepareAddRole() {
     const deptSql = `SELECT id FROM department WHERE  name = "${response.department}"`;
     //searches the database for the id of the selected department
     db.query(deptSql, function (err, results) {
-      console.log("department retrieved");
       department = results[0].id;
       roleSql = `INSERT INTO role (title, salary, department_id) VALUES ("${response.title}", "${response.salary}", "${department}")`;
       return addRole(roleSql);
@@ -293,8 +274,6 @@ function prepareAddRole() {
 function addRole(sql) {
   db.query(sql, function (err, results) {
     console.log("New role added");
-    console.log(err);
-    console.log(results);
     return init();
   });
 }

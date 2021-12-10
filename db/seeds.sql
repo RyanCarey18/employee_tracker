@@ -5,7 +5,7 @@ VALUES ("Electronics"),
        ("Grocery"),
        ("Customer Service");
 
-INSERT INTO roles (department_id, title, salary)
+INSERT INTO role (department_id, title, salary)
 VALUES (2, "Stocker", 25000),
        (2, "Night Crew", 35000),
        (1, "Tech Guy", 30000),
